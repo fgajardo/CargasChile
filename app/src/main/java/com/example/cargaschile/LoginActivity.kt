@@ -1,11 +1,347 @@
 package com.example.cargaschile
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.ImageView
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.cargaschile.databinding.ActivityLoginBinding
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class LoginActivity : AppCompatActivity() {
+    private var currOp = -1 // 0 == login, 1 == logFromReg, 2 == remind, 3 == adminLogin
+
+    private lateinit var binding: ActivityLoginBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+        binding.editLogin.addTextChangedListener(object : TextWatcher {
+
+            override fun afterTextChanged(s: Editable) {}
+
+            override fun beforeTextChanged(s: CharSequence, start: Int,
+                                           count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int,
+                                       before: Int, count: Int) {
+                updateButtons()
+            }
+        })
+        binding.editPassword.addTextChangedListener(object : TextWatcher {
+
+            override fun afterTextChanged(s: Editable) {}
+
+            override fun beforeTextChanged(s: CharSequence, start: Int,
+                                           count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int,
+                                       before: Int, count: Int) {
+                updateButtons()
+            }
+        })
+        binding.buttonLogin.setOnClickListener { this.onLogin(view) }
+        binding.buttonRegister.setOnClickListener { this.onRegister(view) }
+        binding.buttonRemind.setOnClickListener { this.onRemind(view) }
+        updateButtons()
     }
+
+    // onRegister always on
+    // onForget at least username
+    // onLogin usr+pwd>=4
+    fun updateButtons() {
+        val vl = binding.editLogin.text.isNotEmpty()
+        val pwd = binding.editPassword.text.toString()
+        val vp = pwd.isNotEmpty() && pwd.length > 3
+        binding.buttonLogin.isEnabled = vl && vp
+        binding.buttonRemind.isEnabled = vl
+    }
+
+    private fun cb(ret: Int) {
+        println("arg is $ret")
+    }
+
+    private fun cb2(ret: String, isReg: Boolean) { // codigo correcto, cambiar password, pasar a VC si isReg
+        if(isReg) println("ret = $ret, pasar a VC")
+        else println("ret = $ret, pasar a cambiar password")
+    }
+
+    private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // There are no request codes
+            val data: Intent? = result.data
+            doOps(data)
+        }
+    }
+
+    private fun doOps(data: Intent?) {
+        println("Desde register, llego:")
+        if(null != data) {
+            val login = data.getStringExtra("login").toString()
+            val password = data.getStringExtra("password").toString()
+            val email = data.getStringExtra("email").toString()
+            val isDriver = data.getBooleanExtra("isDriver", true)
+            val carencia = data.getIntExtra("carencia", 30)
+            val loadCap = data.getIntExtra("loadCap", 1000)
+            val telNum = data.getIntExtra("telNum", 999999999)
+            // set new user & load TableVCActivity
+            if (login != null) {
+                Model.setUser(login, isDriver, carencia)
+                val i = Intent(this, TableVCActivity::class.java)
+                i.putExtra("login", login)
+                i.putExtra("isDriver", isDriver)
+                startActivity(i)
+            }
+        }
+    }
+
+    private fun wasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+        println("result es $result, res es $res")
+    }
+    private fun rawWasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+        println("RWL result is $result")
+        var msg = ""
+        when (result) // ok
+        {
+            0 -> {
+                if (0 == currOp) // login
+                {
+                    val map = res[0]
+                    val nItems = map.size
+                    if (1 == nItems) // login error
+                    {
+                        val rtn = map["code"]
+                        //Log.d("op_login","code = "+rtn);
+                        Prompt.inform(this@LoginActivity, "", rtn!!,"OK", ::cb)
+                    } else if (nItems > 1) {
+                        doLogin(map)
+                    }
+                    return
+                } else if (1 == currOp) // login from register
+                {
+                    if (null == res) {
+                        return
+                    }
+                    val map = res[0]
+                    val nItems = map.size
+                    if (nItems > 1) // user data
+                    {
+                        doLogin(map)
+                        return
+                    }
+                    // else check for error
+                    msg = map["failed"].toString()
+                    if (null != msg && msg.length > 1) {
+                        Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
+                        return
+                    }
+                } else if (2 == currOp) // remind
+                {
+                    //Log.d("OnRem","in callbackCall");
+                    if (null == res) {
+                        //Log.d("OnRem", "es null");
+                        return
+                    }
+                    val map = res[0]
+                    val coded = map["coded"]
+                    val ts = map["ts"]
+                    val plain = map["plain"]
+                    if (plain != "UNKNOWN") { // Ingrese la clave enviada por correo, llama a cb2(String, Boolean)
+                        val code = Model.sendCode()
+                        Prompt.popInput(this@LoginActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", code, 3000, false, ::cb2)
+                    } else {
+                        Prompt.inform(this@LoginActivity,"","Usuario desconocido", "OK", ::cb)
+                    }
+                } else if (3 == currOp) // to register
+                {
+                    val intent = Intent(this, RegisterActivity::class.java)
+                    resultLauncher.launch(intent)
+
+                    /*                Model.allComunas = HashMap<String, Comuna>()
+                                    //Log.d("MSZ",String.format("comMap has %d entries",res.size()));
+                                    for (i in res.indices) {
+                                        val currMap = res[i]
+                                        val curr = currMap["name"]
+                                        if (curr != null) {
+                                            Model.allComunas.put(curr, "algoRaro")
+                                        }
+                                    }*/
+                    //val intent = Intent(this, RegisterActivity::class.java)
+                    //startActivityForResult(intent, LOGIN_TO_REGISTER)
+                } else if (4 == currOp) // confirm register
+                {
+                    val code = Model.sendCode()
+                    Prompt.popInput(
+                        this@LoginActivity,
+                        "Confirmación",
+                        "Ingrese el código de 4 digitos enviado a su correo electronico",
+                        "OK",
+                        code,
+                        3000,
+                        true,
+                        ::cb2
+                    )
+                }
+                currOp = -1 // clear
+
+                return
+            }
+            1 -> msg = "Error de conexion, intente mas rato"
+            2 -> msg = "Respuesta invalida, tiene minutos?"
+            3 -> msg = "Respuesta nula"
+        }
+        Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
+    }
+
+    private fun onLogin(view: View?) {
+        val args = String.format(
+            "username_field=%s&password_field=%s&op_login=op_login",
+            binding.editLogin.text.toString(),
+            binding.editPassword.text.toString()
+        )
+        //Log.d("post op_login",args);
+        val url: String = Model.getURL("login.php")
+        //Log.d("site",url);
+        currOp = 0
+        Model.loadData(this@LoginActivity, ::rawWasLoaded, url, args)
+    }
+
+    private fun onRegister(view: View?) {
+        val args = String.format("op_comunas=op_comunas")
+        val url: String = Model.getURL("login.php")
+        currOp = 3
+        Model.loadData(this@LoginActivity, ::rawWasLoaded, url, args)
+    }
+
+    /*
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+        super.onActivityResult(requestCode, resultCode, data)
+        val model: Model = Model.getInstance()
+        if (LOGIN_TO_REGISTER === requestCode) // from RegisterActivity
+        {
+            if (resultCode == RESULT_OK) {
+                val b = data.extras
+                    ?: //Log.d("OAR","null bundle");
+                    return
+                if (b.containsKey(LOGIN)) xLogin = b.getCharSequence(LOGIN) as String?
+                /*else
+                    Log.d("OAR","no LOGIN");*/xPassword = b.getCharSequence(PASSWORD) as String?
+                xEmail = b.getCharSequence(EMAIL) as String?
+                xDriver = 1 == b.getInt(DRIVER)
+                if (!b.containsKey(LOAD_CAPACITY)) {
+                    //Log.d("OAR","no LOAD");
+                    return
+                }
+                val load = b.getInt(LOAD_CAPACITY)
+                xLoad = ""
+                if (load > 0) xLoad = Integer.toString(load)
+                xPhone = b.getCharSequence(PHONE) as String?
+                /*                Log.d("-login","'"+xLogin+"'");
+                Log.d("passwd","'"+xPassword+"'");
+                Log.d("mail","'"+xEmail+"'");
+                Log.d("driver","'"+xDriver+"'");
+                Log.d("load","'"+xLoad+"'");
+                Log.d("phone","'"+xPhone+"'");*/
+                val m: Model = Model.getInstance()
+                val args = String.format(
+                    "username_field=%s&password_field=%s&op_login=op_login",
+                    xLogin,
+                    xPassword
+                )
+                val url: String = m.getURL("login.php")
+                //Log.d("post","op_login from register: "+args);
+                currOp = 1
+                m.loadData(this@MainActivity, this@MainActivity, url, args)
+            }
+        } else if (LOGIN_TO_CONFIRM === requestCode) // origin
+        {
+            //Log.d("LG","login_to_confirm");
+            if (resultCode == RESULT_OK) doUserLogin()
+        }
+    }*/
+
+    private fun onRemind(view: View?) {
+        val name = binding.editLogin.text.toString()
+        if (null == name || name.isEmpty()) {
+            val msg = "Ingrese su nombre de usuario para recuperar su clave"
+            Prompt.inform(this,"",msg, "OK", ::cb)
+        } else {
+            val args = String.format("username_field=%s&op_forgot=op_forgot", name)
+            val url: String = Model.getURL("login.php")
+            //Log.d("post op_forgot",args);
+            currOp = 2
+            Model.loadData(this@LoginActivity, ::rawWasLoaded, url, args)
+        }
+    }
+
+    private fun doLogin(map: Map<String, String>) {
+        Model.setUser(map)
+        val site = map["site"]
+        Model.setSite(site!!)
+        //Log.d("SS","site set to "+site);
+        /*
+        val isActive = map[COLUMN_ACTIVE]
+        if (isActive == "0") {
+            //Log.d("DL","inside");
+            val regMail = map[COLUMN_EMAIL]
+            procCheck(regMail)
+            return
+        }*/
+        //Log.d("LG","valid");
+        doUserLogin()
+    }
+
+    fun wasLoaded(res: Int) {
+        //Log.d("LA","wasLoaded("+String.valueOf(res)+")");
+        var msg = ""
+        when (res) // ok
+        {
+            0 -> {/*
+                val intent = Intent(this@LoginActivity, TableVCActivity::class.java)
+                intent.putExtra(LOGIN, Model.currentUser.username)
+                startActivityForResult(intent, LOGIN_TO_TABLE_VC_NEW)
+                */
+            }
+            1 -> msg = "Error de conexion, intente mas rato"
+            2 -> msg = "Respuesta invalida, tiene minutos?"
+            else -> msg = String.format("Algo raro aqui, res = %d", res)
+        }
+        if (msg.isNotEmpty()) {
+            Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
+        }
+    }
+
+    private fun doUserLogin() {
+        Model.dump()
+        val now = Date()
+        val lNow = now.time
+        //if (null == m.currentUser) Log.d("ls()", "currentUser es null");
+        val kf = Model.currentUser.keepFor
+        val desde = lNow - (kf * 24 * 3600 * 1000)
+        val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val dDate = fmt.format(desde)
+        val yesNo = if (Model.currentUser.isDriver) "1" else "0"
+        val args = java.lang.String.format(
+            "username=%s&isDriver=%s&deliveryDate=%s&loadShipmentsFirst=loadShipmentsFirst",
+            Model.currentUser.username,
+            yesNo,
+            dDate
+        )
+        //Log.d("LA/args",args);
+        val url = Model.getURL("shipment.php")
+        Model.loadFirstDataTabla(this@LoginActivity, ::wasLoaded, url, args)
+    }
+
 }
+// style was     <style name="Theme.CargasChile" parent="Theme.MaterialComponents.DayNight.DarkActionBar">

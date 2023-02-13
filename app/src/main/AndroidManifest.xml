@@ -12,6 +12,20 @@
         android:theme="@style/Theme.CargasChile"
         tools:targetApi="31">
         <activity
+            android:name=".TableVCActivity"
+            android:exported="false"
+            android:label="@string/title_activity_table_vcactivity"
+            android:theme="@style/Theme.CargasChile" />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false"
+            android:label="@string/title_activity_register"
+            android:theme="@style/Theme.CargasChile">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".LoginActivity" />
+        </activity>
+        <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
