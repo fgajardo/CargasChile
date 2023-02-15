@@ -8,6 +8,7 @@ import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -18,7 +19,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityRegisterBinding
-
+    private var currCode = "0"
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
@@ -33,6 +34,9 @@ class RegisterActivity : AppCompatActivity() {
         binding.fab.setOnClickListener { view ->
             checkValues()
         }
+        binding.loadCap.isVisible = false
+        binding.telNum.isVisible = false
+
         binding.cbDriver.setOnClickListener { this.onCheckDriver(binding.root) }
     }
 
@@ -47,7 +51,9 @@ class RegisterActivity : AppCompatActivity() {
     fun onCheckDriver(view: View) {
         var isDriver = false
         if(binding.cbDriver.isChecked) isDriver = true
+        binding.loadCap.isVisible = isDriver
         binding.loadCap.isEnabled = isDriver
+        binding.telNum.isVisible = isDriver
         binding.telNum.isEnabled = isDriver
     }
 
@@ -80,6 +86,16 @@ class RegisterActivity : AppCompatActivity() {
         Model.checkPresent(this@RegisterActivity, rtn, login, email, driver, telNum, ::presentCB)
     }
 
+    private fun cb2(ret: String, isReg: Boolean) { // codigo correcto, cambiar password, pasar a VC si isReg
+        if(isReg) {
+            if(ret.equals(currCode)) {
+                val data = Intent()
+                packData(data)
+                setResult(RESULT_OK, data)
+                finish()
+            } else Prompt.inform(this@RegisterActivity,"ERROR","Codigo incorrecto", "OK", ::cb)
+        }
+    }
     private fun presentCB(rtn: String?) {
         if (rtn != null) {
             if (rtn.isNotEmpty()) {
@@ -94,12 +110,12 @@ class RegisterActivity : AppCompatActivity() {
                     ::cb
                 )
                 //return@setOnClickListener
+            } else {
+                println("Pasó, poner codigo y timer aqui")
+                currCode = Model.sendCode()
+                Prompt.popInput(this@RegisterActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", code, 3000, true, ::cb2)
             }
         }
-        val data = Intent()
-        packData(data)
-        setResult(RESULT_OK, data)
-        finish()
     }
 
     fun packData(data: Intent) {

@@ -1,19 +1,17 @@
 package com.example.cargaschile
 
 import android.app.Activity
+import android.content.DialogInterface
 import android.content.Intent
-import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import com.example.cargaschile.databinding.ActivityLoginBinding
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class LoginActivity : AppCompatActivity() {
     private var currOp = -1 // 0 == login, 1 == logFromReg, 2 == remind, 3 == adminLogin
@@ -25,6 +23,7 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+        setSupportActionBar(binding.toolbar)
         binding.editLogin.addTextChangedListener(object : TextWatcher {
 
             override fun afterTextChanged(s: Editable) {}
@@ -55,6 +54,7 @@ class LoginActivity : AppCompatActivity() {
         binding.buttonRegister.setOnClickListener { this.onRegister(view) }
         binding.buttonRemind.setOnClickListener { this.onRemind(view) }
         updateButtons()
+        title = "CargasChile"
     }
 
     // onRegister always on
@@ -106,9 +106,27 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun wasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
-        println("result es $result, res es $res")
+    private fun dataLoaded(result: Int) {
+        var msg = ""
+        when (result) // ok
+        {
+            0 -> {
+                val i = Intent(this, TableVCActivity::class.java)
+                i.putExtra("login", Model.currentUser.username)
+                i.putExtra("isDriver", Model.currentUser.isDriver)
+                startActivity(i)
+            }
+            1 -> msg = "Error de conexion, intente mas rato"
+            2 -> msg = "Respuesta invalida, tiene minutos?"
+            else -> msg = String.format("Algo raro aqui, res = %d", result)
+        }
+        if (msg.isNotEmpty()) {
+            Prompt.inform(this@LoginActivity, "", msg, "OK", ::cb)
+        }
     }
+    private fun wasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+    }
+
     private fun rawWasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
         println("RWL result is $result")
         var msg = ""
@@ -166,19 +184,7 @@ class LoginActivity : AppCompatActivity() {
                 } else if (3 == currOp) // to register
                 {
                     val intent = Intent(this, RegisterActivity::class.java)
-                    resultLauncher.launch(intent)
-
-                    /*                Model.allComunas = HashMap<String, Comuna>()
-                                    //Log.d("MSZ",String.format("comMap has %d entries",res.size()));
-                                    for (i in res.indices) {
-                                        val currMap = res[i]
-                                        val curr = currMap["name"]
-                                        if (curr != null) {
-                                            Model.allComunas.put(curr, "algoRaro")
-                                        }
-                                    }*/
-                    //val intent = Intent(this, RegisterActivity::class.java)
-                    //startActivityForResult(intent, LOGIN_TO_REGISTER)
+                    resultLauncher.launch(intent) // cargar comunas?
                 } else if (4 == currOp) // confirm register
                 {
                     val code = Model.sendCode()
@@ -194,7 +200,6 @@ class LoginActivity : AppCompatActivity() {
                     )
                 }
                 currOp = -1 // clear
-
                 return
             }
             1 -> msg = "Error de conexion, intente mas rato"
@@ -210,6 +215,7 @@ class LoginActivity : AppCompatActivity() {
             binding.editLogin.text.toString(),
             binding.editPassword.text.toString()
         )
+        Model.setUser(binding.editLogin.text.toString(), true, 32) // TMP
         //Log.d("post op_login",args);
         val url: String = Model.getURL("login.php")
         //Log.d("site",url);
@@ -223,53 +229,6 @@ class LoginActivity : AppCompatActivity() {
         currOp = 3
         Model.loadData(this@LoginActivity, ::rawWasLoaded, url, args)
     }
-
-    /*
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        super.onActivityResult(requestCode, resultCode, data)
-        val model: Model = Model.getInstance()
-        if (LOGIN_TO_REGISTER === requestCode) // from RegisterActivity
-        {
-            if (resultCode == RESULT_OK) {
-                val b = data.extras
-                    ?: //Log.d("OAR","null bundle");
-                    return
-                if (b.containsKey(LOGIN)) xLogin = b.getCharSequence(LOGIN) as String?
-                /*else
-                    Log.d("OAR","no LOGIN");*/xPassword = b.getCharSequence(PASSWORD) as String?
-                xEmail = b.getCharSequence(EMAIL) as String?
-                xDriver = 1 == b.getInt(DRIVER)
-                if (!b.containsKey(LOAD_CAPACITY)) {
-                    //Log.d("OAR","no LOAD");
-                    return
-                }
-                val load = b.getInt(LOAD_CAPACITY)
-                xLoad = ""
-                if (load > 0) xLoad = Integer.toString(load)
-                xPhone = b.getCharSequence(PHONE) as String?
-                /*                Log.d("-login","'"+xLogin+"'");
-                Log.d("passwd","'"+xPassword+"'");
-                Log.d("mail","'"+xEmail+"'");
-                Log.d("driver","'"+xDriver+"'");
-                Log.d("load","'"+xLoad+"'");
-                Log.d("phone","'"+xPhone+"'");*/
-                val m: Model = Model.getInstance()
-                val args = String.format(
-                    "username_field=%s&password_field=%s&op_login=op_login",
-                    xLogin,
-                    xPassword
-                )
-                val url: String = m.getURL("login.php")
-                //Log.d("post","op_login from register: "+args);
-                currOp = 1
-                m.loadData(this@MainActivity, this@MainActivity, url, args)
-            }
-        } else if (LOGIN_TO_CONFIRM === requestCode) // origin
-        {
-            //Log.d("LG","login_to_confirm");
-            if (resultCode == RESULT_OK) doUserLogin()
-        }
-    }*/
 
     private fun onRemind(view: View?) {
         val name = binding.editLogin.text.toString()
@@ -289,37 +248,7 @@ class LoginActivity : AppCompatActivity() {
         Model.setUser(map)
         val site = map["site"]
         Model.setSite(site!!)
-        //Log.d("SS","site set to "+site);
-        /*
-        val isActive = map[COLUMN_ACTIVE]
-        if (isActive == "0") {
-            //Log.d("DL","inside");
-            val regMail = map[COLUMN_EMAIL]
-            procCheck(regMail)
-            return
-        }*/
-        //Log.d("LG","valid");
         doUserLogin()
-    }
-
-    fun wasLoaded(res: Int) {
-        //Log.d("LA","wasLoaded("+String.valueOf(res)+")");
-        var msg = ""
-        when (res) // ok
-        {
-            0 -> {/*
-                val intent = Intent(this@LoginActivity, TableVCActivity::class.java)
-                intent.putExtra(LOGIN, Model.currentUser.username)
-                startActivityForResult(intent, LOGIN_TO_TABLE_VC_NEW)
-                */
-            }
-            1 -> msg = "Error de conexion, intente mas rato"
-            2 -> msg = "Respuesta invalida, tiene minutos?"
-            else -> msg = String.format("Algo raro aqui, res = %d", res)
-        }
-        if (msg.isNotEmpty()) {
-            Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
-        }
     }
 
     private fun doUserLogin() {
@@ -340,7 +269,7 @@ class LoginActivity : AppCompatActivity() {
         )
         //Log.d("LA/args",args);
         val url = Model.getURL("shipment.php")
-        Model.loadFirstDataTabla(this@LoginActivity, ::wasLoaded, url, args)
+        Model.loadFirstDataTabla(this@LoginActivity, ::dataLoaded, url, args)
     }
 
 }

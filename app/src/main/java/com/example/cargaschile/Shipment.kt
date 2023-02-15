@@ -10,8 +10,9 @@ class Shipment {
     var id = -1
     var status = -1
     var title = "yo"
+    var details = "nada"
     fun getSubtitle() : String {
-        return "sub$title"
+        return details
     }
     fun hasApe() : Boolean = false
 }

@@ -2,6 +2,7 @@ package com.example.cargaschile
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
@@ -41,24 +42,24 @@ class TableVCActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         isDriverTable = Model.getUser().isDriver
+        title = Model.getUser().username
         binding = com.example.cargaschile.databinding.ActivityTableVcactivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+
         binding.fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_add))
         if(isDriverTable) // Add defined in layout
-            binding.fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_search));
+            binding.fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_search))
 
         binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAnchorView(R.id.fab)
-                .setAction("Action", null).show()
+            if(isDriverTable) println("A SEARCH")
+            else println("A ADD")
         }
     }
 
     override fun onResume() {
         super.onResume() // Always call the superclass method first
         //Log.d("DBG","OnResume TVCA");
-        title = Model.getUser().username
         expListView = findViewById<View>(R.id.tableView) as ExpandableListView
         context = this@TableVCActivity
         data = Model.getDataTable()
@@ -143,7 +144,7 @@ class TableVCActivity : AppCompatActivity() {
     fun cb(ret: Int) { // 0 == ret => se borra
         if(true == data?.removeItemAt(currSection, currRow))
             moea?.notifyDataSetChanged()
-        println("Borrado de la tabla")
+        println("Borrado de la tabla, de la DB tambien")
     }
     fun rawWasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
         println("TableVC, RWL result is $result")
@@ -165,6 +166,12 @@ class TableVCActivity : AppCompatActivity() {
         val itemView: View? = expListView!!.getChildAt(0)
         mItemPosition = if (itemView == null) 0 else itemView.getTop()
         state.putInt(ITEM_POSITION_KEY, mItemPosition)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {

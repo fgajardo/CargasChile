@@ -3,6 +3,7 @@ package com.example.cargaschile
 import android.content.Context
 
 object Model {
+    lateinit var data : Tabla
     lateinit var allComunas : HashMap<String, Comuna>
     lateinit var currentUser: User
     lateinit var currentShipment: Shipment
@@ -18,14 +19,11 @@ object Model {
         currentUser = User(login, isDriver, carencia)
     }
     fun setUser(name:String, isDrv: Boolean, keep: Int) {
-        User(name, isDrv, keep).also { currentUser = it }
+        currentUser = User(name, isDrv, keep)
+        data = Tabla()
     }
     fun getUser() : User { return currentUser }
-    fun getDataTable() : Tabla? {
-        val t = Tabla()
-        t.S1V0()
-        println("Loaded "+t.dump())
-        return t }
+    fun getDataTable() : Tabla? { return data }
 
     fun getURL(path: String) : String { return "http//$path" }
     fun loadData(context: Context, rawWasLoaded: (res: ArrayList<Map<String, String>>, result: Int) -> Unit, url: String, args: String) {
@@ -34,10 +32,27 @@ object Model {
         if(args.equals("op_comunas=op_comunas")) {
             rawWasLoaded(rtn,0)
         }
+        else if(args.contains("op_login")) {
+            var map = HashMap<String, String>()
+            map["login"] = "luchito"
+            map["isDriver"] = "1"
+            map["carencia"] = "32"
+            map["site"] = "http://novacea.cl/ws/"
+            rtn.add(map)
+            rtn.add(map)
+            rawWasLoaded(rtn,0)
+        }
+        else if(args.contains("bidsForShipment")) {
+            val caller = url[7].toInt()
+            println("Caller is "+caller)
+        }
     }
 
-    fun loadFirstDataTabla(context: Context, rawWasLoaded: (res: ArrayList<Map<String, String>>, result: Int) -> Unit, url: String, args: String) {
-        println("loadData: rul = $url, args = $args")
+    fun loadFirstDataTabla(context: Context, wasLoaded: (res: Int) -> Unit, url: String, args: String) {
+        println("loadFirstDataTabla: url = $url, args = $args")
+        data = Tabla()
+        data.Schofer()
+        wasLoaded(0)
     }
 
     fun checkPresent(context: Context, rtn: String, login: String, email: String, driver:Boolean, telNum: Int, cb: (res: String) -> Unit) {
