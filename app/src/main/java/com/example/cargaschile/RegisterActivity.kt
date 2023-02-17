@@ -64,6 +64,7 @@ class RegisterActivity : AppCompatActivity() {
             Prompt.inform(this@RegisterActivity, "ERROR", "Codigo incorrecto", "OK", ::cbi)
     }
 
+
     fun cbm(res: ArrayList<HashMap<String,String>>, result: Int)
     {
         var msg = ""
@@ -72,7 +73,8 @@ class RegisterActivity : AppCompatActivity() {
             val map = res[0]
             if(map.containsKey("code")) {
                 currCode = map["code"].toString()
-                Prompt.popInput(this@RegisterActivity,"", "Se le ha enviado un codigo de 4 digitos a su email, por favor reviselo (incluyendo SPAM) e ingreselo aca", "OK",
+                val email = map["email"].toString()
+                Prompt.popInput(this@RegisterActivity,"", "Se le ha enviado un codigo de 4 digitos a su email $email, por favor reviselo (incluyendo SPAM) e ingreselo aca", "OK",
                         10000, false, ::cbsb)
             } else {
                 val str = map["present"].toString()

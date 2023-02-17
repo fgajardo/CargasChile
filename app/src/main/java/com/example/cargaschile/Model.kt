@@ -104,19 +104,36 @@ object Model {
 
 
 
-    fun loadData(context: Context, rawWasLoaded: (res: ArrayList<Map<String, String>>, result: Int) -> Unit, url: String, args: String) {
+    fun loadData(context: Context, rawWasLoaded: (res: ArrayList<HashMap<String, String>>, result: Int) -> Unit, url: String, args: String) {
         println("loadData: rul = $url, args = $args")
-        var rtn = ArrayList<Map<String, String>>()
+        var rtn = ArrayList<HashMap<String, String>>()
+        var map = HashMap<String, String>()
         if(args.equals("op_comunas=op_comunas")) {
             rawWasLoaded(rtn,0)
         }
         else if(args.contains("op_login")) {
-            var map = HashMap<String, String>()
             map["login"] = "luchito"
             map["isDriver"] = "1"
             map["carencia"] = "32"
             map["site"] = "http://novacea.cl/ws/"
             rtn.add(map)
+            rtn.add(map)
+            rawWasLoaded(rtn,0)
+        }
+        else if(args.contains("op_forgot")) {
+            // op_forgot + username_field, either email+code || usr not found
+            val found = true
+            println("inside loadData/forgot")
+            val parsed = parse(args)
+            val usr = parsed["username_field"].toString()
+            if(found) {
+                map["code"] = "1234"
+                map["email"] = "pepito@algo.cl"
+                setUser(usr, true, 33)
+                println("set "+ currentUser.username)
+            } else {
+                map["error"] = "El usuario $usr no existe"
+            }
             rtn.add(map)
             rawWasLoaded(rtn,0)
         }
@@ -136,9 +153,9 @@ object Model {
     fun checkPresent(context: Context, rtn: String, login: String, email: String, driver:Boolean, telNum: Int, cb: (res: String) -> Unit) {
         // check if login, email & eventually phone are already present
         // post(url, args) -> callback
-        val usrOk = true
+        val usrOk = false
         val emailOk = true
-        var phoneOk = true
+        var phoneOk = false
         if(driver) phoneOk = false
         var wrong = 0
         if(!usrOk) wrong++
@@ -149,6 +166,7 @@ object Model {
         if(0 == wrong) {
             // get code, sendmail
             map["code"] = "1234"
+            map["email"] = "pepito@algo.cl"
         } else {
             if(1 == wrong) {
                 var sub = ""
@@ -175,8 +193,6 @@ object Model {
         callback(res, 0)
         cb(rtn)
     }
-
-    fun sendCode() : String = "1234"
 
     fun dump() {}
 

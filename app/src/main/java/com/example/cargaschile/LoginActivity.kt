@@ -17,7 +17,7 @@ class LoginActivity : AppCompatActivity() {
     private var currOp = -1 // 0 == login, 1 == logFromReg, 2 == remind, 3 == adminLogin
 
     private lateinit var binding: ActivityLoginBinding
-
+    var currCode = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -124,10 +124,29 @@ class LoginActivity : AppCompatActivity() {
             Prompt.inform(this@LoginActivity, "", msg, "OK", ::cb)
         }
     }
-    private fun wasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+    private fun wasLoaded(res: ArrayList<HashMap<String, String>>, result: Int) {
     }
 
-    private fun rawWasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+    fun cbi(i: Int) {
+    }
+    fun cbs(s: String) {
+        println("cbs($s)")
+    }
+
+    fun cbsb(s: String, b: Boolean) {
+        if(currCode == s) { // estamos listos, cerrar y entrar a la principal
+            //Model.setUser(login, isDriver, carencia)
+            val i = Intent(this, TableVCActivity::class.java)
+            println("peek")
+            i.putExtra("login", Model.currentUser.username)
+            println("done")
+            i.putExtra("isDriver", Model.currentUser.isDriver)
+            startActivity(i)
+        } else // cueck
+            Prompt.inform(this@LoginActivity, "ERROR", "Codigo incorrecto", "OK", ::cbi)
+    }
+
+    private fun rawWasLoaded(res: ArrayList<HashMap<String, String>>, result: Int) {
         println("RWL result is $result")
         var msg = ""
         when (result) // ok
@@ -166,19 +185,16 @@ class LoginActivity : AppCompatActivity() {
                     }
                 } else if (2 == currOp) // remind
                 {
-                    //Log.d("OnRem","in callbackCall");
-                    if (null == res) {
-                        //Log.d("OnRem", "es null");
-                        return
-                    }
+                    // error | email+codigo
                     val map = res[0]
-                    val coded = map["coded"]
-                    val ts = map["ts"]
-                    val plain = map["plain"]
-                    if (plain != "UNKNOWN") { // Ingrese la clave enviada por correo, llama a cb2(String, Boolean)
-                        Prompt.popInput(this@LoginActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", 3000, false, ::cb2)
+                    if(map.containsKey("code")) {
+                        currCode = map["code"].toString()
+                        val email = map["email"].toString()
+                        Prompt.popInput(this@LoginActivity,"", "Se le ha enviado un codigo de 4 digitos a su email $email, por favor reviselo (incluyendo SPAM) e ingreselo aca", "OK",
+                            10000, false, ::cbsb)
                     } else {
-                        Prompt.inform(this@LoginActivity,"","Usuario desconocido", "OK", ::cb)
+                        val str = map["error"].toString()
+                        Prompt.inform(this@LoginActivity, "ERROR", str, "OK", ::cbi)
                     }
                 } else if (3 == currOp) // to register
                 {
@@ -203,7 +219,7 @@ class LoginActivity : AppCompatActivity() {
             2 -> msg = "Respuesta invalida, tiene minutos?"
             3 -> msg = "Respuesta nula"
         }
-        Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
+        if(msg.isNotEmpty()) Prompt.inform(this@LoginActivity, "", msg,"OK", ::cb)
     }
 
     private fun onLogin(view: View?) {

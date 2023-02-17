@@ -146,7 +146,7 @@ class TableVCActivity : AppCompatActivity() {
             moea?.notifyDataSetChanged()
         println("Borrado de la tabla, de la DB tambien")
     }
-    fun rawWasLoaded(res: ArrayList<Map<String, String>>, result: Int) {
+    fun rawWasLoaded(res: ArrayList<HashMap<String, String>>, result: Int) {
         println("TableVC, RWL result is $result")
     }
     // invoked when the activity may be temporarily destroyed, save the instance state here
