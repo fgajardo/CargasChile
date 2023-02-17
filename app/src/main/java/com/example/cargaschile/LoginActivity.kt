@@ -137,9 +137,7 @@ class LoginActivity : AppCompatActivity() {
         if(currCode == s) { // estamos listos, cerrar y entrar a la principal
             //Model.setUser(login, isDriver, carencia)
             val i = Intent(this, TableVCActivity::class.java)
-            println("peek")
             i.putExtra("login", Model.currentUser.username)
-            println("done")
             i.putExtra("isDriver", Model.currentUser.isDriver)
             startActivity(i)
         } else // cueck

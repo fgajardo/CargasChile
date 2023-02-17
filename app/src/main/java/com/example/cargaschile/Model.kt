@@ -122,7 +122,7 @@ object Model {
         }
         else if(args.contains("op_forgot")) {
             // op_forgot + username_field, either email+code || usr not found
-            val found = true
+            val found = false
             println("inside loadData/forgot")
             val parsed = parse(args)
             val usr = parsed["username_field"].toString()

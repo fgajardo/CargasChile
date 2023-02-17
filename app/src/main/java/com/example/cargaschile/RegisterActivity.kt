@@ -112,7 +112,7 @@ class RegisterActivity : AppCompatActivity() {
         if(str.isNotEmpty()) telNum = binding.telNum.text.toString().toInt()
         var rtn = ""
         if (driver) {
-            if (null == telNum || telNum < 100000000) rtn = "Telefono invalido, deben ser 9 dígitos"
+            if (null == telNum || telNum < 100000000 || telNum > 999999999) rtn = "Telefono invalido, deben ser 9 dígitos"
             if (0 == loadCap) rtn = "Capacidad de carga no puede ser cero"
         }
         if (carencia <= 0) rtn = "Carencia debe ser mayor que cero dias"

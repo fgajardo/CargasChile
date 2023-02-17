@@ -1,5 +1,7 @@
 package com.example.cargaschile
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.Menu
@@ -7,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ExpandableListView
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -42,6 +45,7 @@ class TableVCActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         isDriverTable = Model.getUser().isDriver
+        isDriverTable = true
         title = Model.getUser().username
         binding = com.example.cargaschile.databinding.ActivityTableVcactivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -176,13 +180,26 @@ class TableVCActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.action_settings -> {
-            println("Settings asked")
+            val i = Intent(this, SettingsActivity::class.java)
+            i.putExtra("isDriver", isDriverTable)
+            startActivity(i)
             true
         }
         else -> {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.
             super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun updateSettings(data: Intent?) {
+
+    }
+    private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // There are no request codes
+            val data: Intent? = result.data
+            updateSettings(data)
         }
     }
 
