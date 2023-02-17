@@ -176,8 +176,7 @@ class LoginActivity : AppCompatActivity() {
                     val ts = map["ts"]
                     val plain = map["plain"]
                     if (plain != "UNKNOWN") { // Ingrese la clave enviada por correo, llama a cb2(String, Boolean)
-                        val code = Model.sendCode()
-                        Prompt.popInput(this@LoginActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", code, 3000, false, ::cb2)
+                        Prompt.popInput(this@LoginActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", 3000, false, ::cb2)
                     } else {
                         Prompt.inform(this@LoginActivity,"","Usuario desconocido", "OK", ::cb)
                     }
@@ -187,13 +186,11 @@ class LoginActivity : AppCompatActivity() {
                     resultLauncher.launch(intent) // cargar comunas?
                 } else if (4 == currOp) // confirm register
                 {
-                    val code = Model.sendCode()
                     Prompt.popInput(
                         this@LoginActivity,
                         "Confirmación",
                         "Ingrese el código de 4 digitos enviado a su correo electronico",
                         "OK",
-                        code,
                         3000,
                         true,
                         ::cb2

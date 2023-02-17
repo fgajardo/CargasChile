@@ -48,6 +48,43 @@ class RegisterActivity : AppCompatActivity() {
     fun cb(ret: String, isReg: Boolean) {
     }
 
+    fun cbi(i: Int) {
+    }
+    fun cbs(s: String) {
+        println("cbs($s)")
+    }
+
+    fun cbsb(s: String, b: Boolean) {
+        if(currCode == s) { // estamos listos, cerrar y entrar a la principal
+            val data = Intent()
+            packData(data)
+            setResult(RESULT_OK, data)
+            finish()
+        } else // cueck
+            Prompt.inform(this@RegisterActivity, "ERROR", "Codigo incorrecto", "OK", ::cbi)
+    }
+
+    fun cbm(res: ArrayList<HashMap<String,String>>, result: Int)
+    {
+        var msg = ""
+        if (0 == result) // ok
+        {
+            val map = res[0]
+            if(map.containsKey("code")) {
+                currCode = map["code"].toString()
+                Prompt.popInput(this@RegisterActivity,"", "Se le ha enviado un codigo de 4 digitos a su email, por favor reviselo (incluyendo SPAM) e ingreselo aca", "OK",
+                        10000, false, ::cbsb)
+            } else {
+                val str = map["present"].toString()
+                Prompt.inform(this@RegisterActivity, "ERROR", str, "OK", ::cbi)
+            }
+        }
+        else if (1 == result) msg = "Error de conexion, intente mas rato"
+        else if (2 == result) msg = "Respuesta invalida, tiene minutos?"
+        else if (3 == result) msg = "Respuesta nula"
+        if(msg.isNotEmpty()) Prompt.inform(this@RegisterActivity, "", msg, "OK", ::cbi)
+    }
+
     fun onCheckDriver(view: View) {
         var isDriver = false
         if(binding.cbDriver.isChecked) isDriver = true
@@ -82,40 +119,13 @@ class RegisterActivity : AppCompatActivity() {
         if (null == password || password.isEmpty()) rtn = "Clave nula"
         else if (password.length < 4) rtn = "Clave muy corta, minimo 4"
         if (null == login || login.isEmpty()) rtn = "Nombre de usuario nulo"
-        // check if login, email or phone are not already present
-        Model.checkPresent(this@RegisterActivity, rtn, login, email, driver, telNum, ::presentCB)
-    }
-
-    private fun cb2(ret: String, isReg: Boolean) { // codigo correcto, cambiar password, pasar a VC si isReg
-        if(isReg) {
-            if(ret.equals(currCode)) {
-                val data = Intent()
-                packData(data)
-                setResult(RESULT_OK, data)
-                finish()
-            } else Prompt.inform(this@RegisterActivity,"ERROR","Codigo incorrecto", "OK", ::cb)
+        if(rtn.isNotEmpty()) {
+            Prompt.inform(this@RegisterActivity, "ERROR", rtn, "OK", ::cbi)
+            return
         }
-    }
-    private fun presentCB(rtn: String?) {
-        if (rtn != null) {
-            if (rtn.isNotEmpty()) {
-                Prompt.popInput(
-                    this@RegisterActivity,
-                    "Error",
-                    rtn,
-                    "OK",
-                    "code",
-                    3000,
-                    true,
-                    ::cb
-                )
-                //return@setOnClickListener
-            } else {
-                println("Pasó, poner codigo y timer aqui")
-                currCode = Model.sendCode()
-                Prompt.popInput(this@RegisterActivity, "Confirmación", "Ingrese el código de 4 digitos enviado a su correo electronico", "OK", code, 3000, true, ::cb2)
-            }
-        }
+        // else, check if login, email or phone are not already present
+        Model.setCallback(::cbm)
+        Model.checkPresent(this@RegisterActivity, rtn, login, email, driver, telNum, ::cbs)
     }
 
     fun packData(data: Intent) {

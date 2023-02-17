@@ -19,7 +19,7 @@ object Prompt {
         stuff(ctx, title, message, false, yesText, noText, cb)
     }
 
-    fun popInput(ctx: Context, title: String, message: String, yesText: String, code: String, timeOut: Long, isRegister: Boolean, cb: (ret: String, isReg: Boolean) -> Unit) {
+    fun popInput(ctx: Context, title: String, message: String, yesText: String, timeOut: Long, isRegister: Boolean, cb: (ret: String, isReg: Boolean) -> Unit) {
         val builder = AlertDialog.Builder(ctx)
         builder.setTitle(title)
         builder.setMessage(message)
