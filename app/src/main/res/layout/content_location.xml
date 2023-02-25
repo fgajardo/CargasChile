@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <TextView
+        android:id="@+id/selCol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Comuna seleccionada: Ninguna" />
+    <CheckBox
+        android:id="@+id/fromCurrentPos"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Usar ubicacion actual?" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="O selecciona una comuna?" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRegiones"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/provincia_item" />
+
+</LinearLayout>
