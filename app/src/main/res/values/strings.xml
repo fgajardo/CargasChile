@@ -45,4 +45,6 @@
     </string>
     <string name="title_activity_table_vcactivity">TableVCActivity</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    <string name="title_activity_status">StatusActivity</string>
+    <string name="title_activity_shipment">ShipmentActivity</string>
 </resources>

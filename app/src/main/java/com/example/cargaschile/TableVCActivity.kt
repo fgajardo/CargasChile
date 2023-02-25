@@ -82,7 +82,7 @@ class TableVCActivity : AppCompatActivity() {
             if (0 == Model.currentShipment.status) {
                 if (isDriverTable) // bid for current shipment
                 {
-                    args = java.lang.String.format(
+                    args = String.format(
                         "sID=%d&bidder=%s&loadChildClick=loadChildClick",
                         Model.currentShipment.id,
                         Model.currentUser.username
@@ -91,7 +91,7 @@ class TableVCActivity : AppCompatActivity() {
                 } // isDriverTable
                 else  // bidders for current shipment
                 {
-                    args = java.lang.String.format(
+                    args = String.format(
                         "sID=%d&bidsForShipment=bidsForShipment",
                         Model.currentShipment.id
                     )
@@ -101,7 +101,7 @@ class TableVCActivity : AppCompatActivity() {
             else  // load StatusActivity
             {
                 val isDriver = if (isDriverTable) "1" else "0"
-                args = java.lang.String.format(
+                args = String.format(
                     "sid=%d&isDriver=%s&loadForStatus=loadForStatus",
                     Model.currentShipment.id,
                     isDriver
@@ -109,7 +109,7 @@ class TableVCActivity : AppCompatActivity() {
                 url = Model.getURL("status.php")
                 caller = 4
             }
-            val ms = java.lang.String.format("caller=%d, args=%s, url=%s", caller, args, url)
+            val ms = String.format("caller=%d, args=%s, url=%s", caller, args, url)
             //Log.d("DBG",ms);
             Model.loadData(this@TableVCActivity, ::rawWasLoaded, url, args)
             true
@@ -150,9 +150,31 @@ class TableVCActivity : AppCompatActivity() {
             moea?.notifyDataSetChanged()
         println("Borrado de la tabla, de la DB tambien")
     }
+
+    fun cbi(ret: Int) {
+
+    }
     fun rawWasLoaded(res: ArrayList<HashMap<String, String>>, result: Int) {
         println("TableVC, RWL result is $result")
+        var msg = ""
+        if (0 == result) // ok
+        {
+            //val map = res[0]
+            // drv + pending
+            val intent = Intent(this@TableVCActivity, StatusActivity::class.java)
+            intent.putExtra("title", "Show shipment")
+            intent.putExtra("contents", "Descripcion del envio seleccionado\nLinea 1\nLinea 2\nLinea 3")
+            intent.putExtra("buttonText", "Nada")
+            //intent.putExtra("simple", true)
+            startActivity(intent)
+        }
+        else if (1 == result) msg = "Error de conexion, intente mas rato"
+        else if (2 == result) msg = "Respuesta invalida, tiene minutos?"
+        else if (3 == result) msg = "Respuesta nula"
+        if(msg.isNotEmpty()) Prompt.inform(this@TableVCActivity, "", msg, "OK", ::cbi)
+
     }
+
     // invoked when the activity may be temporarily destroyed, save the instance state here
     override fun onSaveInstanceState(state: Bundle) {
         super.onSaveInstanceState(state)

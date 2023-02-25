@@ -12,6 +12,16 @@
         android:theme="@style/Theme.CargasChile"
         tools:targetApi="31">
         <activity
+            android:name=".ShipmentActivity"
+            android:exported="false"
+            android:label="@string/title_activity_shipment"
+            android:theme="@style/Theme.CargasChile" />
+        <activity
+            android:name=".StatusActivity"
+            android:exported="false"
+            android:label="@string/title_activity_status"
+            android:theme="@style/Theme.CargasChile" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings"

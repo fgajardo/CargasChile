@@ -18,14 +18,14 @@ class Tabla {
         val s0 = Shipment()
         s0.id = 0
         s0.title = "Sandias para Chillan"
-        s0.details = "Puesto hace 2 h, sin postulantes"
+        s0.comments = "Puesto hace 2 h, sin postulantes"
         s0.status = 0
         p.add(s0)
         val s1 = Shipment()
         s1.id = 1
         s1.title = "Melones a Rancagua"
         s1.status = 0
-        s1.details = "Puesto hace 1 dia, 18 postulantes, minimo $55,000.-"
+        s1.comments = "Puesto hace 1 dia, 18 postulantes, minimo $55,000.-"
         p.add(s1)
         val sc0 = Section(p)
         append(sc0)
@@ -34,7 +34,7 @@ class Tabla {
         val sa0 = Shipment()
         sa0.id = 2
         sa0.title = "Pallets devueltos"
-        sa0.details = "Asignado hace 45 min, sale en 2 dias"
+        sa0.comments = "Asignado hace 45 min, sale en 2 dias"
         sa0.status = 1
         a.add(sa0)
         val sca = Section(a)
@@ -44,7 +44,7 @@ class Tabla {
         val st0 = Shipment()
         st0.id = 0
         st0.title = "Tambores vacios"
-        st0.details = "Entregado hace 4 dias"
+        st0.comments = "Entregado hace 4 dias"
         st0.status = 2
         t.add(st0)
         val sc1 = Section(t)
@@ -56,14 +56,14 @@ class Tabla {
         val s0 = Shipment()
         s0.id = 0
         s0.title = "Sandias para Chillan"
-        s0.details = "Postulado hace 2 h, sale en 1 dia, $45,000.-"
+        s0.comments = "Postulado hace 2 h, sale en 1 dia, $45,000.-"
         s0.status = 0
         p.add(s0)
         val s1 = Shipment()
         s1.id = 1
         s1.title = "Melones a Rancagua"
         s1.status = 0
-        s1.details = "Postulado hace 14 h, sale en 2 dias, $58,000.-"
+        s1.comments = "Postulado hace 14 h, sale en 2 dias, $58,000.-"
         p.add(s1)
         val sc0 = Section(p)
         append(sc0)
@@ -72,13 +72,13 @@ class Tabla {
         val sa0 = Shipment()
         sa0.id = 2
         sa0.title = "Pallets devueltos"
-        sa0.details = "Asignado hace 45 min, sale en 2 dias"
+        sa0.comments = "Asignado hace 45 min, sale en 2 dias"
         sa0.status = 1
         a.add(sa0)
         val sa1 = Shipment()
         sa1.id = 2
         sa1.title = "Sacos de papas"
-        sa1.details = "Recogido hace 14 min, en tránsito"
+        sa1.comments = "Recogido hace 14 min, en tránsito"
         sa1.status = 1
         a.add(sa1)
         val sca = Section(a)
@@ -88,7 +88,7 @@ class Tabla {
         val st0 = Shipment()
         st0.id = 0
         st0.title = "Tambores vacios"
-        st0.details = "Entregado hace 4 dias"
+        st0.comments = "Entregado hace 4 dias"
         st0.status = 2
         t.add(st0)
         val sc1 = Section(t)

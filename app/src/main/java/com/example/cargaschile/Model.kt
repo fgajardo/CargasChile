@@ -12,6 +12,8 @@ object Model {
     lateinit var allComunas : HashMap<String, Comuna>
     lateinit var currentUser: User
     lateinit var currentShipment: Shipment
+    var newShipment = true
+
     private lateinit var callback : (res: ArrayList<HashMap<String,String>>, result: Int) -> Unit
     private lateinit var mParams : HashMap<String, String>
     var website = "UNDEFINED"
@@ -141,6 +143,8 @@ object Model {
             val caller = url[7].toInt()
             println("Caller is "+caller)
         }
+        else if(args.contains("loadChildClick"))
+            rawWasLoaded(rtn, 0)
     }
 
     fun loadFirstDataTabla(context: Context, wasLoaded: (res: Int) -> Unit, url: String, args: String) {
@@ -193,6 +197,8 @@ object Model {
         callback(res, 0)
         cb(rtn)
     }
+
+    fun loadDataTabla(context: Context, url: String, args: String, cb:(result: Int) -> Unit) {}
 
     fun dump() {}
 
